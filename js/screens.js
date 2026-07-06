@@ -216,8 +216,9 @@ function drawReport(){
   ctx.textAlign='center';ctx.fillStyle=UI.dim;ctx.font='12px Consolas';
   ctx.fillText('scroll: mouse wheel · ↑ ↓ / PgUp PgDn      —      Esc: back',W/2,678);
 }
-/* the full report is a game-styled page (report/dossier.html) opened on its OWN page/tab */
-function openFullReport(){ try{ window.open(REPORT_URL,'_blank','noopener'); }catch(e){} }
+/* the full report is a game-styled page (report/dossier.html) — navigate in the SAME tab
+   (its "◄ BACK TO GAME" link returns here in-place). */
+function openFullReport(){ try{ window.location.href=REPORT_URL; }catch(e){} }
 
 function drawSetup(){
   drawGrid();
