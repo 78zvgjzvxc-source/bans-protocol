@@ -8,22 +8,3 @@ canvas#c{display:block;background:#06070d;box-shadow:0 0 60px #0af3;cursor:cross
   position:fixed;bottom:6px;left:50%;transform:translateX(-50%);
   font-size:12px;color:#5a7;opacity:.6;letter-spacing:1px;
 }
-
-/* Full-report overlay (in-page reader launched from the SYSTEM DOSSIER) */
-#reportOverlay{
-  display:none;position:fixed;inset:0;z-index:60;flex-direction:column;
-  background:rgba(4,7,14,.97);
-}
-#reportBar{
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-  padding:10px 18px;background:linear-gradient(180deg,#0e1a28,#0a1018);
-  border-bottom:1px solid rgba(95,170,255,.35);
-}
-#reportTitle{color:#5fd0ff;font:700 14px Consolas,monospace;letter-spacing:1px;}
-#reportClose{
-  background:rgba(95,208,255,.14);color:#e8f4ff;border:1px solid #5fd0ff;
-  border-radius:6px;padding:7px 14px;font:700 13px Consolas,monospace;
-  cursor:pointer;white-space:nowrap;
-}
-#reportClose:hover{background:rgba(95,208,255,.30);}
-#reportFrame{flex:1;width:100%;border:0;background:#fff;}

@@ -9,7 +9,6 @@ const mouse={x:W/2,y:H/2,down:false};
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase(); keys[k]=true;
   if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) e.preventDefault();
-  if(window.reportOverlayOpen){ if(k==='escape') closeFullReport(); return; }   // full-report overlay owns input
   if(G.state==='report'){                                                       // SYSTEM DOSSIER scroll / back
     const jump=420;
     if(k==='escape'||k==='backspace'){ G.state='setup'; if(window.Sound)Sound.ui(); }

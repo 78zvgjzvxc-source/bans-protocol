@@ -18,7 +18,7 @@ const armoryBtn ={x:W/2-230,y:556,w:220,h:54};
 const deployBtn ={x:W/2+10, y:556,w:220,h:54};
 const dailyChip ={x:24,y:104,w:260,h:22};
 const reportChip={x:24,y:132,w:230,h:24};
-const REPORT_URL='report/Progress_Report_1_UPDATED.html';   // bundled inside game/report/ (overridden in the artifact build)
+const REPORT_URL='report/dossier.html';   // game-styled full report page — opens as its own page (overridden in the artifact build)
 const perkCards =[0,1,2].map(i=>({x:W/2-336+i*228,y:270,w:212,h:236}));
 const reportBackBtn={x:W/2-430,y:650,w:210,h:44};
 const reportFullBtn={x:W/2+150,y:650,w:280,h:44};
@@ -216,18 +216,8 @@ function drawReport(){
   ctx.textAlign='center';ctx.fillStyle=UI.dim;ctx.font='12px Consolas';
   ctx.fillText('scroll: mouse wheel · ↑ ↓ / PgUp PgDn      —      Esc: back',W/2,678);
 }
-/* full-report overlay: in-page iframe locally / on Render; new tab in the CSP-locked artifact */
-function openFullReport(){
-  if(/^https?:/i.test(REPORT_URL)){ try{window.open(REPORT_URL,'_blank');}catch(e){} return; }
-  const ov=document.getElementById('reportOverlay'), fr=document.getElementById('reportFrame');
-  if(!ov||!fr){ try{window.open(REPORT_URL,'_blank');}catch(e){} return; }
-  if(!fr.getAttribute('src')) fr.setAttribute('src',REPORT_URL);   // load once, on demand
-  ov.style.display='flex'; window.reportOverlayOpen=true;
-}
-function closeFullReport(){ const ov=document.getElementById('reportOverlay');
-  if(ov) ov.style.display='none'; window.reportOverlayOpen=false; }
-{ const rc=document.getElementById('reportClose');
-  if(rc) rc.addEventListener('click',()=>{ closeFullReport(); if(window.Sound)Sound.ui(); }); }
+/* the full report is a game-styled page (report/dossier.html) opened on its OWN page/tab */
+function openFullReport(){ try{ window.open(REPORT_URL,'_blank','noopener'); }catch(e){} }
 
 function drawSetup(){
   drawGrid();
