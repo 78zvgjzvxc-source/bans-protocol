@@ -20,6 +20,74 @@ const dailyChip ={x:24,y:104,w:260,h:22};
 const reportChip={x:24,y:132,w:230,h:24};
 const REPORT_URL='report/Progress_Report_1_UPDATED.html';   // bundled inside game/report/ (overridden in the artifact build)
 const perkCards =[0,1,2].map(i=>({x:W/2-336+i*228,y:270,w:212,h:236}));
+const reportBackBtn={x:W/2-430,y:650,w:210,h:44};
+const reportFullBtn={x:W/2+150,y:650,w:280,h:44};
+
+/* SYSTEM DOSSIER — the in-game report, drawn on the canvas (state 'report').
+   A condensed briefing; the OPEN FULL REPORT button pops the complete document. */
+const REPORT_DOC=[
+ {t:'h',s:'WHAT THIS IS'},
+ {t:'p',s:"BAN's Protocol is a top-down survival shooter whose entire difficulty is driven by a Mamdani fuzzy inference system. Roughly twice a second the engine reads your live state, fires the fuzzy rules, and re-tunes enemy aggression, supply drops and enemy-type mix on the fly — an AI director that adapts to how you actually play."},
+ {t:'sp'},
+ {t:'h',s:'DEVELOPMENT PHASES'},
+ {t:'li',s:'Core — 5 inputs to 1 output (Threat), 243 Mamdani rules driving enemy aggression.'},
+ {t:'li',s:'Phase 1 · Combat depth — spitters, elites, boss patterns, dash, melee, stealth takedowns, combos.'},
+ {t:'li',s:'Phase 2 · Roguelite — perks, sector modifiers, deployable mine / turret, barrels, extraction beacon, daily seed.'},
+ {t:'li',s:'Phase 3 · Fuzzy depth — added the Skill input + Composition output (now 6 to 3, 729 rules), a Sugeno path with a Mamdani-Sugeno toggle, and an analytics overlay (control surface, rule-firing heatmap, defuzz comparison, CSV export).'},
+ {t:'li',s:'Phase 4 · UX / polish — settings menu, pause stats, first-run tutorial, threat-adaptive music, weather, gamepad + touch.'},
+ {t:'sp'},
+ {t:'h',s:'THE 6 FUZZY INPUTS'},
+ {t:'li',s:'Health — how hurt you are (0-100).'},
+ {t:'li',s:'Ammo — magazine + reserve fraction.'},
+ {t:'li',s:'Noise — sound made by shooting / sprinting; draws the horde.'},
+ {t:'li',s:'Pressure — how many enemies are already engaging you.'},
+ {t:'li',s:'Exposure — how visible / out-of-cover you are.'},
+ {t:'li',s:'Skill (adaptive) — blends accuracy, kills/min, wave and damage taken. Average skill leaves the balance unchanged; stronger play ramps difficulty up.'},
+ {t:'sp'},
+ {t:'h',s:'THE 3 FUZZY OUTPUTS'},
+ {t:'li',s:'Threat -> enemy aggression, spawn count and speed.'},
+ {t:'li',s:'Supply -> pickup / drop rate (help the desperate, starve the comfortable).'},
+ {t:'li',s:'Composition -> enemy-type mix, from Swarm (light) through Mixed to Heavy (elite-laden).'},
+ {t:'sp'},
+ {t:'h',s:'WHY 729 RULES'},
+ {t:'p',s:'6 inputs x 3 fuzzy sets each = 3^6 = 729 antecedent combinations. Every possible state is covered, so the director never hits an undefined case. The rules are not hand-written — they are generated from three transparent scoring policies, so the table stays exhaustive yet fully consistent.'},
+ {t:'sp'},
+ {t:'h',s:'THE THREE POLICIES (rule consequents)'},
+ {t:'f',s:'THREAT = 0.55(H+A) + 0.8*Noise - 0.6*Pressure + 1.7*Exposure + 0.6*(Skill-1)'},
+ {t:'f',s:'SUPPLY = (2-H) + (2-A) + 0.6*Pressure'},
+ {t:'f',s:'COMPO  = 0.5(H+A) + 0.7*Noise + 0.8*Exposure + 0.5*Skill'},
+ {t:'d',s:'Each score maps to Low / Medium / High linguistic consequents for its output.'},
+ {t:'sp'},
+ {t:'h',s:'SYSTEM FLOW'},
+ {t:'p',s:'live player state  ->  fuzzify (6 membership sets)  ->  evaluate 729 rules (AND = min)  ->  clip consequents  ->  aggregate (max)  ->  defuzzify (centroid)  ->  Threat / Supply / Composition  ->  drives spawns, drops & enemy mix  ->  loop.'},
+ {t:'sp'},
+ {t:'h',s:'IN-GAME SECTION CATEGORIES'},
+ {t:'p',s:'Fuzzy director · Combat & weapons · Roguelite meta (perks / sectors / deployables) · World (maze, fog, line-of-sight) · Audio · Fuzzy analytics · HUD & gauges.'},
+ {t:'sp'},
+ {t:'h',s:'CODE FILES'},
+ {t:'li',s:'config / balance — canvas setup & central tuning constants.'},
+ {t:'li',s:'fuzzy — the Mamdani + Sugeno engine, 729-rule generator, defuzzifiers, weapon advisor.'},
+ {t:'li',s:'state — the single G game-state object + reset().'},
+ {t:'li',s:'world — maze generation, walls, line-of-sight, fog, minimap.'},
+ {t:'li',s:'mechanics — shoot / reload / spawn and the main update loop; runs inference.'},
+ {t:'li',s:'weapons / roguelite — guns & levelling; perks, sectors, deployables, achievements.'},
+ {t:'li',s:'input — keyboard, mouse, gamepad, touch.'},
+ {t:'li',s:'render / post / hud — world rendering, bloom, gauges & graphs.'},
+ {t:'li',s:'screens — setup, armory, pause, this dossier + click routing.'},
+ {t:'li',s:'analytics — the fuzzy analytics overlay (control surface, heatmap, CSV).'},
+ {t:'li',s:'audio / main — sound engine; the requestAnimationFrame loop.'},
+ {t:'sp'},
+ {t:'h',s:'FULL REPORT'},
+ {t:'p',s:'Press OPEN FULL REPORT below for the complete document — every section, the worked fuzzification example, the membership graphs, and the entire 729-row rule table.'},
+];
+/* left-aligned word-wrap that RETURNS the y of the last line (for stacked blocks) */
+function wrapReturn(txt,cx,y,maxW,lh){
+  const words=txt.split(' '); let line='';
+  for(const w of words){ const test=line?line+' '+w:w;
+    if(ctx.measureText(test).width>maxW && line){ ctx.fillText(line,cx,y); line=w; y+=lh; } else line=test; }
+  if(line) ctx.fillText(line,cx,y);
+  return y;
+}
 
 function wrapText(txt,cx,y,maxW,lh){
   const words=txt.split(' '); let line='';
@@ -106,6 +174,60 @@ function bigBtn(b,label,hovFill){
   ctx.fillStyle=UI.text;ctx.font='bold 22px Consolas';ctx.textAlign='center';
   ctx.fillText(label,b.x+b.w/2,b.y+b.h/2+8);
 }
+
+/* SYSTEM DOSSIER screen — scrollable canvas briefing (state 'report') */
+function drawReport(){
+  drawGrid();
+  ctx.textAlign='center';ctx.fillStyle=UI.accent;ctx.font='900 34px '+UI.display;
+  ctx.shadowBlur=18;ctx.shadowColor='#0af';ctx.fillText('ISP568 · SYSTEM DOSSIER',W/2,58);ctx.shadowBlur=0;
+  ctx.fillStyle='#9cf';ctx.font='14px Consolas';
+  ctx.fillText("BAN's PROTOCOL — 6 inputs -> 3 outputs · 729-rule Mamdani director",W/2,86);
+
+  const vx=W/2-430, vw=860, vy=104, vh=534, startY=vy+30, x=vx+34, maxW=vw-96, visibleH=vh-44;
+  panel(vx,vy,vw,vh,'');
+  ctx.save();
+  ctx.beginPath();ctx.rect(vx+3,vy+8,vw-6,vh-16);ctx.clip();
+  ctx.textAlign='left';
+  let y=startY-(G.reportScroll||0);
+  for(const b of REPORT_DOC){
+    if(b.t==='sp'){ y+=12; continue; }
+    if(b.t==='h'){ y+=10; ctx.font='bold 15px Consolas'; ctx.fillStyle=UI.accent;
+      y=wrapReturn(b.s,x,y,maxW,20)+8;
+      ctx.strokeStyle='rgba(95,170,255,0.22)';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x,y-4);ctx.lineTo(x+maxW,y-4);ctx.stroke(); y+=12; continue; }
+    if(b.t==='p'){ ctx.font='14px Consolas'; ctx.fillStyle=UI.text; y=wrapReturn(b.s,x,y,maxW,21)+21; continue; }
+    if(b.t==='li'){ ctx.font='13px Consolas';
+      ctx.fillStyle=UI.accent;ctx.fillText('•',x,y); ctx.fillStyle=UI.text;
+      y=wrapReturn(b.s,x+16,y,maxW-16,19)+19; continue; }
+    if(b.t==='f'){ ctx.font='13px Consolas'; ctx.fillStyle=UI.ammo; y=wrapReturn(b.s,x+6,y,maxW-6,19)+19; continue; }
+    if(b.t==='d'){ ctx.font='12px Consolas'; ctx.fillStyle=UI.dim; y=wrapReturn(b.s,x,y,maxW,17)+17; continue; }
+  }
+  ctx.restore();
+  const totalH=y-(startY-(G.reportScroll||0));            // full content height (scroll-invariant)
+  G._reportMax=Math.max(0,totalH-visibleH);
+  if((G.reportScroll||0)>G._reportMax) G.reportScroll=G._reportMax;
+  if(G._reportMax>0){                                     // scrollbar
+    const tX=vx+vw-14, tY=vy+30, tH=vh-52, thumbH=Math.max(30,tH*visibleH/totalH);
+    ctx.fillStyle='rgba(120,150,180,0.15)';roundRect(tX,tY,6,tH,3);ctx.fill();
+    ctx.fillStyle=UI.accent;roundRect(tX,tY+(G.reportScroll/G._reportMax)*(tH-thumbH),6,thumbH,3);ctx.fill();
+  }
+  menuBtn(reportBackBtn,'← BACK');
+  menuBtn(reportFullBtn,'📖 OPEN FULL REPORT','rgba(70,224,140,0.32)');
+  ctx.textAlign='center';ctx.fillStyle=UI.dim;ctx.font='12px Consolas';
+  ctx.fillText('scroll: mouse wheel · ↑ ↓ / PgUp PgDn      —      Esc: back',W/2,678);
+}
+/* full-report overlay: in-page iframe locally / on Render; new tab in the CSP-locked artifact */
+function openFullReport(){
+  if(/^https?:/i.test(REPORT_URL)){ try{window.open(REPORT_URL,'_blank');}catch(e){} return; }
+  const ov=document.getElementById('reportOverlay'), fr=document.getElementById('reportFrame');
+  if(!ov||!fr){ try{window.open(REPORT_URL,'_blank');}catch(e){} return; }
+  if(!fr.getAttribute('src')) fr.setAttribute('src',REPORT_URL);   // load once, on demand
+  ov.style.display='flex'; window.reportOverlayOpen=true;
+}
+function closeFullReport(){ const ov=document.getElementById('reportOverlay');
+  if(ov) ov.style.display='none'; window.reportOverlayOpen=false; }
+{ const rc=document.getElementById('reportClose');
+  if(rc) rc.addEventListener('click',()=>{ closeFullReport(); if(window.Sound)Sound.ui(); }); }
 
 function drawSetup(){
   drawGrid();
@@ -380,7 +502,7 @@ function handleDown(p){
   }
   if(G.state==='setup'){
     if(inRect(p,settingsGear)){ G.showSettings=true; if(window.Sound)Sound.ui(); return; }
-    if(inRect(p,reportChip)){ try{ window.open(REPORT_URL,'_blank'); }catch(e){} if(window.Sound)Sound.ui(); return; }
+    if(inRect(p,reportChip)){ G.state='report'; G.reportScroll=0; if(window.Sound)Sound.ui(); return; }
     if(inRect(p,dailyChip)){ G.daily=!G.daily; if(window.Sound)Sound.ui(); return; }
     for(const s of sliders){ const kx=sliderKnobX(s);
       if(Math.hypot(p.x-kx,p.y-s.y)<22 || (p.x>=s.x&&p.x<=s.x+s.w&&Math.abs(p.y-s.y)<16)){
@@ -397,6 +519,11 @@ function handleDown(p){
     }
     for(const u of upgChips){ if(inRect(p,chipBtn(u))){ tryUpgradePlayer(u.key); if(window.Sound)Sound.ui(); return; } }
     if(inRect(p,shopBackBtn)){ G.state='setup'; if(window.Sound)Sound.ui(); }
+    return;
+  }
+  if(G.state==='report'){
+    if(inRect(p,reportBackBtn)){ G.state='setup'; if(window.Sound)Sound.ui(); return; }
+    if(inRect(p,reportFullBtn)){ openFullReport(); if(window.Sound)Sound.ui(); return; }
     return;
   }
   if(G.state==='dead'){ if(inRect(p,redeployBtn)){ G.state='setup'; if(window.Sound)Sound.ui(); } return; }

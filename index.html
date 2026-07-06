@@ -12,6 +12,16 @@
 </head>
 <body>
 <div id="wrap"><canvas id="c"></canvas></div>
+
+<!-- Full-report overlay — opened from the in-game SYSTEM DOSSIER (screens.js). -->
+<div id="reportOverlay">
+  <div id="reportBar">
+    <span id="reportTitle">📄 ISP568 · BAN's Protocol — Full Report</span>
+    <button id="reportClose">✕ CLOSE&nbsp;&nbsp;(Esc)</button>
+  </div>
+  <iframe id="reportFrame" title="ISP568 BAN's Protocol Report"></iframe>
+</div>
+
 <div id="hint">WASD: move &nbsp;•&nbsp; Mouse: aim &nbsp;•&nbsp; Click / Space: shoot &nbsp;•&nbsp; Q / 1 / 2 / 3: weapons &nbsp;•&nbsp; R: reload &nbsp;•&nbsp; Shift: dash &nbsp;•&nbsp; F / RMB: melee &nbsp;•&nbsp; E: mine &nbsp;•&nbsp; T: turret &nbsp;•&nbsp; B / V: panels &nbsp;•&nbsp; C: fuzzy analytics &nbsp;•&nbsp; G: god &nbsp;•&nbsp; M: mute &nbsp;•&nbsp; N: track &nbsp;•&nbsp; Esc: pause</div>
 
 <!-- Load order matters: each script builds on the previous ones. -->

@@ -9,6 +9,16 @@ const mouse={x:W/2,y:H/2,down:false};
 addEventListener('keydown',e=>{
   const k=e.key.toLowerCase(); keys[k]=true;
   if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k)) e.preventDefault();
+  if(window.reportOverlayOpen){ if(k==='escape') closeFullReport(); return; }   // full-report overlay owns input
+  if(G.state==='report'){                                                       // SYSTEM DOSSIER scroll / back
+    const jump=420;
+    if(k==='escape'||k==='backspace'){ G.state='setup'; if(window.Sound)Sound.ui(); }
+    else if(k==='arrowdown') G.reportScroll=Math.min(G._reportMax||0,(G.reportScroll||0)+48);
+    else if(k==='arrowup')   G.reportScroll=Math.max(0,(G.reportScroll||0)-48);
+    else if(k==='pagedown'||k===' ') G.reportScroll=Math.min(G._reportMax||0,(G.reportScroll||0)+jump);
+    else if(k==='pageup')    G.reportScroll=Math.max(0,(G.reportScroll||0)-jump);
+    return;
+  }
   if(G.tutorial){ G.tutorial=false; G.meta.tutorialSeen=true; saveMeta(); return; }   // any key deploys
   if(G.showSettings){ if(k==='escape'){ G.showSettings=false; saveMeta(); } return; }
   if(k==='c' && G.state==='play'){ G.showAnalytics=!G.showAnalytics; if(G.showAnalytics){ G._surface=null; computeSurface(); } return; }
@@ -49,6 +59,8 @@ cv.addEventListener('mousedown',e=>{ const p=cpos(e); mouse.x=p.x; mouse.y=p.y;
   if(e.button===2){ if(G.state==='play') melee(); return; }   // right-click = melee, not shoot
   mouse.down=true; handleDown(p); });
 cv.addEventListener('contextmenu',e=>e.preventDefault());       // allow right-click melee without the menu
+cv.addEventListener('wheel',e=>{ if(G.state==='report'){ e.preventDefault();   // scroll the SYSTEM DOSSIER
+  G.reportScroll=Math.max(0,Math.min(G._reportMax||0,(G.reportScroll||0)+e.deltaY)); } },{passive:false});
 addEventListener('mouseup',()=>{ mouse.down=false; activeSlider=null;
   if(setDragKey){ setDragKey=null; saveMeta(); } });
 

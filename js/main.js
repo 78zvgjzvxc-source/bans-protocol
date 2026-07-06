@@ -17,6 +17,7 @@ function frame(){
   else if(G.state==='perk') drawPerks();
   else if(G.state==='paused') drawPause();
   else if(G.state==='dead') drawDead();
+  else if(G.state==='report') drawReport();   // in-game SYSTEM DOSSIER (canvas briefing)
   ctx.restore();
   if(G.state==='play' && G.showAnalytics) drawAnalytics();   // fuzzy analytics overlay [C]
   else if(G.state==='play' && G.tutorial) drawTutorial();    // first-run overlay

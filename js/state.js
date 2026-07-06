@@ -4,7 +4,8 @@
    G is the single source of truth for everything mutable in the game.
    ---------------------------------------------------------------------------- */
 const G = {
-  state:'setup',          // setup | shop | play | paused | dead
+  state:'setup',          // setup | shop | play | paused | dead | report
+  reportScroll:0,_reportMax:0,   // in-game SYSTEM DOSSIER scroll position
   t:0,
   player:{x:W/2,y:H/2,r:16,hp:100,maxhp:100,speed:3.0,angle:0,recoil:0,walk:0,muzzle:0,
           dash:0,dashCd:0,iframes:0,melee:0,meleeCd:0,dashX:0,dashY:0},
