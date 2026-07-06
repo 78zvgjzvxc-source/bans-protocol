@@ -18,7 +18,7 @@ const armoryBtn ={x:W/2-230,y:556,w:220,h:54};
 const deployBtn ={x:W/2+10, y:556,w:220,h:54};
 const dailyChip ={x:24,y:104,w:260,h:22};
 const reportChip={x:24,y:132,w:230,h:24};
-const REPORT_URL='../report/Progress_Report_1_UPDATED.html';   // overridden in the hosted build
+const REPORT_URL='report/Progress_Report_1_UPDATED.html';   // bundled inside game/report/ (overridden in the artifact build)
 const perkCards =[0,1,2].map(i=>({x:W/2-336+i*228,y:270,w:212,h:236}));
 
 function wrapText(txt,cx,y,maxW,lh){
